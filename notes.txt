@@ -1,0 +1,7 @@
+python -m venv .venv                                                       
+
+// activate venv
+.venv\Scripts\activate
+
+// pip install pyTelegramBotAPI 
+// pip list

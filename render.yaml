@@ -1,0 +1,49 @@
+# Render Blueprint - lets you deploy this whole service with "New +" ->
+# "Blueprint" in the Render dashboard, pointed at this repo, instead of
+# clicking through every setting by hand.
+#
+# You still need to fill in the secret env vars (marked sync: false below)
+# from the Render dashboard after the first deploy - Render won't let you
+# commit real secrets into this file.
+#
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: blessings-data-hub-bot
+    runtime: python
+    plan:
+      free # free plan spins down on idle, which delays
+      # webhook delivery and bot replies - use at
+      # least "starter" for anything beyond testing
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    healthCheckPath: /health
+    disk:
+      name: bot-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value:
+          5000 # Render overrides this automatically at runtime;
+          # kept here only as a documented default
+      - key: DB_PATH
+        value: /data/blessings_data_hub.db
+      - key: PUBLIC_BASE_URL
+        sync:
+          false # set this AFTER your first deploy, once you
+          # know the *.onrender.com domain Render assigned
+          # (or your custom domain), then redeploy
+      - key: TELEGRAM_API_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: ADMIN_CHAT_IDS
+        sync: false
+      - key: HUBNET_API_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
