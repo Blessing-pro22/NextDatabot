@@ -1,3 +1,2 @@
 [tool.vercel]
 entrypoint = "webhook_server:app"
-Learn More: https://vercel.com/docs/frameworks/backend/flask#exporting-the-flask-application
