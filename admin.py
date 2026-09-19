@@ -6,10 +6,13 @@ and button taps are silently ignored (no "access denied" reply, so the
 existence of /admin isn't advertised to regular customers).
 
 Covers:
-  /admin        - inline panel: stats, transactions, users, bundles, broadcast
-  /ban <id>     - block a user from ordering
-  /unban <id>   - unblock a user
-  /retry <ref>  - re-queue a failed order for Hubnet delivery
+  /admin           - inline panel: stats, transactions, users, bundles, broadcast
+  /ban <id>        - block a user from ordering
+  /unban <id>      - unblock a user
+  /retry <ref>     - re-submit a genuinely failed order to Hubnet as a new attempt
+  /markdelivered <ref> - correct a false failure (Hubnet actually delivered
+                         it) WITHOUT re-submitting; re-notifies the customer
+  /markfailed <ref> [reason] - mark an order failed without touching Hubnet
 
 bot.py wires this in via `admin.register(bot)` and routes free-text
 messages through `admin.handle_admin_text(...)` first, since adding a
@@ -246,7 +249,9 @@ def register(bot):
             return
         parts = message.text.split()
         if len(parts) != 2:
-            bot.reply_to(message, "Usage: /retry <reference>")
+            bot.reply_to(message, "Usage: /retry <reference>\n"
+                                   "Re-submits to Hubnet as a NEW attempt. Only use this for genuine "
+                                   "failures - if Hubnet actually delivered it, use /markdelivered instead.")
             return
         reference = parts[1]
         order = db.get_order(reference)
@@ -256,6 +261,53 @@ def register(bot):
         db.update_order_status(reference, "paid")
         worker.enqueue_order(reference)
         bot.reply_to(message, f"Re-queued {reference} for Hubnet delivery.")
+
+    @bot.message_handler(commands=["markdelivered"])
+    def markdelivered_cmd(message):
+        if not is_admin(message.from_user.id):
+            return
+        parts = message.text.split()
+        if len(parts) != 2:
+            bot.reply_to(message, "Usage: /markdelivered <reference>\n"
+                                   "Use this when Hubnet's dashboard shows a transaction as "
+                                   "Accepted/Completed but the bot reported it as failed (a false "
+                                   "failure) - this corrects the record WITHOUT re-submitting to "
+                                   "Hubnet, and re-notifies the customer.")
+            return
+        reference = parts[1]
+        order = db.get_order(reference)
+        if not order:
+            bot.reply_to(message, "No order found with that reference.")
+            return
+        db.update_order_status(reference, "delivered")
+        worker._notify(
+            order["telegram_chat_id"],
+            f"✅ Update on ref {reference}: your {order['volume_mb']}MB bundle was actually "
+            f"delivered successfully. Sorry for the confusing message earlier!",
+        )
+        bot.reply_to(message, f"Marked {reference} as delivered and notified the customer.")
+
+    @bot.message_handler(commands=["markfailed"])
+    def markfailed_cmd(message):
+        if not is_admin(message.from_user.id):
+            return
+        parts = message.text.split(maxsplit=2)
+        if len(parts) < 2:
+            bot.reply_to(message, "Usage: /markfailed <reference> [reason]")
+            return
+        reference = parts[1]
+        reason = parts[2] if len(parts) > 2 else "Marked failed by admin"
+        order = db.get_order(reference)
+        if not order:
+            bot.reply_to(message, "No order found with that reference.")
+            return
+        db.update_order_status(reference, "failed", failure_reason=reason)
+        worker._notify(
+            order["telegram_chat_id"],
+            f"⚠️ Update on ref {reference}: this order has been marked as failed ({reason}). "
+            f"Contact support about a refund.",
+        )
+        bot.reply_to(message, f"Marked {reference} as failed and notified the customer.")
 
 
 def _toggle_ban(bot, message, banned):

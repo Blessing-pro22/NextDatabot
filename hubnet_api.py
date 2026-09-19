@@ -127,7 +127,14 @@ def make_transaction(network_token, phone, volume_mb, reference,
     )
     data = _safe_json(resp)
 
-    accepted = bool(data.get("status")) and data.get("message") == "0000"
+    # Hubnet's own docs say the `status` boolean is the authoritative
+    # accept/reject signal ("true = transaction accepted; false =
+    # rejected"). We used to also require message == "0000", but Hubnet
+    # doesn't always send that - sometimes `message` is a human-readable
+    # success sentence instead (e.g. "Your transaction has been processed
+    # and is now complete."), which made a real success look like a
+    # rejection and reported a delivered bundle as failed. Trust `status`.
+    accepted = bool(data.get("status"))
     if not accepted:
         raise HubnetError(
             data.get("data", {}).get("message") or data.get("message") or "Transaction rejected",
