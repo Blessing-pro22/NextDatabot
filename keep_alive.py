@@ -6,18 +6,17 @@ app = Flask(__name__)
 
 
 @app.route('/')
+@app.route('/health')
 def home():
-  return 'Bot is online and running!'
+  return 'Bot is online and running!', 200
 
 
 def run():
-  # Render automatically injects the PORT variable
   port = int(os.environ.get('PORT', 8080))
   app.run(host='0.0.0.0', port=port)
 
 
 def keep_alive():
-  # Runs the Flask server on a background thread
   t = Thread(target=run)
   t.daemon = True
   t.start()
