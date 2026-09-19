@@ -202,7 +202,7 @@ def contact_cmd(message):
         "<b>Customer Support</b>\n\n"
         "Need help with your order or have inquiries?\n"
         "Reach out to us directly:\n\n"
-        "📞 <b>Phone / WhatsApp:</b> <code>YOUR_PHONE_NUMBER_HERE</code>\n\n"
+        "📞 <b>Phone / WhatsApp:</b> <code>0547962860</code>\n\n"
         "<i>Available 24/7 for order support.</i>"
     )
     bot.send_message(message.chat.id, text)
