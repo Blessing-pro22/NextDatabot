@@ -20,7 +20,6 @@ Conversation flow:
 
 import logging
 import re
-from keep_alive import keep_alive
 import telebot
 from telebot.types import (
     InlineKeyboardButton,
@@ -413,7 +412,6 @@ def free_text(message):
 
 
 def run_polling():
-  keep_alive()
   db.init_db()
   worker.init(bot)
   worker.start()

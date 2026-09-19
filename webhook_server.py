@@ -45,15 +45,22 @@ def paystack_webhook():
             return jsonify({"received": True}), 200
 
         if order["status"] == "pending_payment":
-            # Double-check with Paystack directly rather than trusting the
-            # webhook body alone - defends against spoofed/replayed events.
-            verified = paystack_api.verify_transaction(reference)
-            paid = verified.get("data", {}).get("status") == "success"
-            if paid:
-                db.update_order_status(reference, "paid")
-                worker.enqueue_order(reference)
-            else:
-                logger.warning("Webhook said success but verify disagreed for %s", reference)
+                        paid = False
+                        try:
+                                verified = paystack_api.verify_transaction(reference)
+                                paid = verified.get("data", {}).get("status") == "success"
+                        except Exception as exc:
+                                logger.warning("Verify call failed, falling back to event body: %s", exc)
+                                paid = (
+                                        event.get("data", {}).get("status") == "success"
+                                        or event_type == "charge.success"
+                                )
+
+                        if paid:
+                                db.update_order_status(reference, "paid")
+                                worker.enqueue_order(reference)
+                        else:
+                            logger.warning("Webhook said success but verify disagreed for %s", reference)
 
     return jsonify({"received": True}), 200
 
@@ -132,10 +139,12 @@ def payment_callback():
     return html
 
 
-@app.get("/health")
+@app.route("/")
+@app.route("/health")
 def health():
-    return jsonify({"status": "ok"}), 200
+  return jsonify({"status": "ok", "message": "Bot is online and running!"}), 200
 
 
 def run():
-    app.run(host=config.WEBHOOK_SERVER_HOST, port=config.WEBHOOK_SERVER_PORT)
+  port = int(os.environ.get("PORT", getattr(config, "WEBHOOK_SERVER_PORT", 8080)))
+  app.run(host="0.0.0.0", port=port)

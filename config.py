@@ -72,6 +72,9 @@ HUBNET_WEBHOOK_PATH = "/webhook/hubnet"
 PAYSTACK_CALLBACK_URL = (
     "https://blessings-data-hub-bot.onrender.com/payment/callback"
 )
+HUBNET_WEBHOOK_URL = f"{PUBLIC_BASE_URL}{HUBNET_WEBHOOK_PATH}"
+PAYSTACK_WEBHOOK_URL = f"{PUBLIC_BASE_URL}{PAYSTACK_WEBHOOK_PATH}"
+
 WEBHOOK_SERVER_HOST = os.getenv("HOST", "0.0.0.0")
 WEBHOOK_SERVER_PORT = int(os.getenv("PORT", "5000"))
 
@@ -79,3 +82,4 @@ DB_PATH = os.getenv("DB_PATH", "blessings_data_hub.db")
 
 # Currency used by Paystack for this integration (Ghanaian cedi)
 CURRENCY = "GHS"
+# https://blessings-data-hub-bot.onrender.com/webhook/paystack
