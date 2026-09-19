@@ -153,7 +153,7 @@ def send_welcome(message):
     _sessions.pop(message.chat.id, None)
     text = (
         f"Hello {message.from_user.first_name}! Welcome to <b>Blessings Data Hub</b>.\n"
-        f"Buy MTN, AirtelTigo, big-time or Telecel data bundles right here, "
+        f"Buy MTN, AirtelTigo iShare, Airteltigo Big-time or Telecel data bundles right here, "
         f"pay securely by card/mobile money, and we deliver instantly.\n\n"
         f"Tap <b>📶 Buy Data</b> to get started."
     )
