@@ -19,10 +19,10 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python run.py
     healthCheckPath: /health
-    disk:
-      name: bot-data
-      mountPath: /data
-      sizeGB: 1
+    # disk:
+    #   name: bot-data
+    #   mountPath: /data
+    #   sizeGB: 1
     envVars:
       - key: PORT
         value:
