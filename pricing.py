@@ -32,11 +32,27 @@ DEFAULT_BUNDLES = {
     45000: {"label": "45 GB", "price_ghs": 169.50},
     50000: {"label": "50 GB", "price_ghs": 189.00},
     },
-    "AIRTELTIGO" : {
-
+    "AIRTELTIGO ISHARE" : {
+         1000: {"label": "1 GB", "price_ghs": 4.60},
+            2000: {"label": "2 GB", "price_ghs": 9.50},
+            3000: {"label": "3 GB", "price_ghs": 14.50},
+            4000: {"label": "4 GB", "price_ghs": 20.20},
+            5000: {"label": "5 GB", "price_ghs": 24.50},
+            6000: {"label": "6 GB", "price_ghs": 29.20},
+            7000: {"label": "7 GB", "price_ghs": 31.20},
+            8000: {"label": "8 GB", "price_ghs": 35.50},
+            9000: {"label": "9 GB", "price_ghs": 40.50},
+            10000: {"label": "10 GB", "price_ghs": 45.00},
+            12000: {"label": "12 GB", "price_ghs": 53.00},
+            15000: {"label": "15 GB", "price_ghs": 66.00},
+            20000: {"label": "20 GB", "price_ghs": 85.00},
     },
+    "AIRTELTIGO BIGTIME" : {
+         30000: {"label": "30 GB", "price_ghs": 88.00},
+            40000: {"label": "40 GB", "price_ghs": 120.00},
+            50000: {"label": "50 GB", "price_ghs": 150.00},
+},
 }
-
 # Hubnet's documented volume range per transaction (see hubnet_api_doc.pdf,
 # section 4: Request Parameters).
 MIN_VOLUME_MB = 1
