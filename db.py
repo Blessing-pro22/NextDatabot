@@ -128,11 +128,8 @@ def init_db():
                     "VALUES (?, ?, ?, 1, ?, ?)",
                     [(r["volume_mb"], default_label(r["volume_mb"]), r["price_ghs"], now, now)
                      for r in legacy_rows],
-                )
-
-    _seed_bundles_if_empty()
-
-
+                )    
+            _seed_bundles_if_empty()
 def _seed_bundles_if_empty():
     from pricing import DEFAULT_BUNDLES
 
@@ -140,10 +137,17 @@ def _seed_bundles_if_empty():
         cur.execute("SELECT COUNT(*) AS n FROM bundles")
         if cur.fetchone()["n"] == 0:
             now = _now()
+            # Flatten nested network dictionary, keeping distinct volume_mb
+            unique_bundles = {}
+            for network, bundles in DEFAULT_BUNDLES.items():
+                for mb, b in bundles.items():
+                    if mb not in unique_bundles:
+                        unique_bundles[mb] = (mb, b["label"], b["price_ghs"], now, now)
+
             cur.executemany(
                 "INSERT INTO bundles (volume_mb, label, price_ghs, active, created_at, updated_at) "
                 "VALUES (?, ?, ?, 1, ?, ?)",
-                [(mb, b["label"], b["price_ghs"], now, now) for mb, b in DEFAULT_BUNDLES.items()],
+                list(unique_bundles.values()),
             )
 
 
