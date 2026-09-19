@@ -46,9 +46,9 @@ HUBNET_WINDOW_SECONDS = 60
 # Networks supported by Hubnet -> {display label, URL path token}
 NETWORKS = {
     "mtn": {"label": "MTN", "token": "mtn"},
-    "at": {"label": "AirtelTigo", "token": "at"},
-    "big-time": {"label": "big-time (AirtelTigo)", "token": "big-time"},
-    "telecel": {"label": "Telecel", "token": "telecel"},
+    "at": {"label": "AIRTELTIGO ISHARE", "token": "at"},
+    "big-time": {"label": "AIRTELTIGO BIGTIME", "token": "big-time"},
+    "telecel": {"label": "TELECEL", "token": "telecel"},
 }
 
 # ---------------------------------------------------------------------------

@@ -35,6 +35,7 @@ import db
 import hubnet_api
 import paystack_api
 import worker
+from pricing import DEFAULT_BUNDLES
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("bot")
@@ -49,8 +50,9 @@ PHONE_RE = re.compile(r"^0\d{9}$")
 _sessions: dict[int, dict] = {}
 
 MAIN_MENU = ReplyKeyboardMarkup(resize_keyboard=True)
+MAIN_MENU = ReplyKeyboardMarkup(resize_keyboard=True)
 MAIN_MENU.add("📶 Buy Data", "📦 My Orders")
-MAIN_MENU.add("❓ Help")
+MAIN_MENU.add("❓ Help", "📞 Contact Us")
 
 
 # ---------------------------------------------------------------------------
@@ -67,13 +69,31 @@ def _network_keyboard():
     return kb
 
 
+def _get_network_bundles(network_key):
+    # Try exact match, then uppercase match
+    if network_key in DEFAULT_BUNDLES:
+        return DEFAULT_BUNDLES[network_key]
+    
+    # Try match by network label or uppercase
+    net_info = config.NETWORKS.get(network_key, {})
+    label = net_info.get("label", "").upper()
+    for k in DEFAULT_BUNDLES:
+        if k.upper() == label or k.upper() == str(network_key).upper():
+            return DEFAULT_BUNDLES[k]
+    
+    # Fallback to first available network if not matched
+    return next(iter(DEFAULT_BUNDLES.values()))
+
+
 def _bundle_keyboard(network_key):
-    bundles = db.get_all_bundles(active_only=True)
+    net_bundles = _get_network_bundles(network_key)
     kb = InlineKeyboardMarkup(row_width=2)
     buttons = [
-        InlineKeyboardButton(f"{b['label']} - GHS {b['price_ghs']:.2f}",
-                              callback_data=f"bundle:{network_key}:{b['volume_mb']}")
-        for b in bundles
+        InlineKeyboardButton(
+            f"{info['label']} - GHS {info['price_ghs']:.2f}",
+            callback_data=f"bundle:{network_key}:{volume_mb}"
+        )
+        for volume_mb, info in net_bundles.items()
     ]
     kb.add(*buttons)
     kb.add(InlineKeyboardButton("« Back", callback_data="back:networks"))
@@ -91,7 +111,8 @@ def _confirm_keyboard():
 
 def _order_summary_text(network_key, volume_mb, phone):
     label = config.NETWORKS[network_key]["label"]
-    bundle = db.get_bundle(volume_mb)
+    net_bundles = _get_network_bundles(network_key)
+    bundle = net_bundles.get(volume_mb, {"label": f"{volume_mb} MB", "price_ghs": 0.0})
     price = bundle["price_ghs"]
     return (
         f"<b>Order Summary</b>\n"
@@ -174,7 +195,17 @@ def help_cmd(message):
         "Having an issue with an order? Send /orders and quote the reference "
         "number to our support team.",
     )
-
+@bot.message_handler(commands=["contact"])
+@bot.message_handler(func=lambda m: m.text == "📞 Contact Us")
+def contact_cmd(message):
+    text = (
+        "<b>Customer Support</b>\n\n"
+        "Need help with your order or have inquiries?\n"
+        "Reach out to us directly:\n\n"
+        "📞 <b>Phone / WhatsApp:</b> <code>YOUR_PHONE_NUMBER_HERE</code>\n\n"
+        "<i>Available 24/7 for order support.</i>"
+    )
+    bot.send_message(message.chat.id, text)
 
 # ---------------------------------------------------------------------------
 # Callback (inline button) handlers
@@ -207,8 +238,9 @@ def on_back_to_networks(call):
 def on_bundle_chosen(call):
     _, network_key, volume_mb = call.data.split(":")
     volume_mb = int(volume_mb)
-    bundle = db.get_bundle(volume_mb)
-    if not bundle or not bundle["active"]:
+    net_bundles = _get_network_bundles(network_key)
+    bundle = net_bundles.get(volume_mb)
+    if not bundle:
         bot.answer_callback_query(call.id, "That bundle is no longer available.")
         bot.edit_message_text(
             f"Network: {config.NETWORKS[network_key]['label']}\nNow choose a bundle size:",
@@ -238,12 +270,13 @@ def on_confirm_order(call):
     network_key = session["network"]
     volume_mb = session["volume_mb"]
     phone = session["phone"]
-    bundle = db.get_bundle(volume_mb)
-    if not bundle or not bundle["active"]:
+    net_bundles = _get_network_bundles(network_key)
+    bundle = net_bundles.get(volume_mb)
+    if not bundle:
         bot.answer_callback_query(call.id, "That bundle is no longer available.")
         bot.send_message(call.message.chat.id, "That bundle was just removed. Please choose another one.")
         _sessions.pop(call.message.chat.id, None)
-        return
+    return
     price = bundle["price_ghs"]
 
     user = db.get_or_create_user(
