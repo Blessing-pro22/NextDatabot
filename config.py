@@ -65,10 +65,10 @@ PAYSTACK_VERIFY_URL = "https://api.paystack.co/transaction/verify/{reference}"
 # PUBLIC_BASE_URL must be a real, internet-reachable HTTPS URL in production
 # (Paystack and Hubnet both need to be able to POST webhooks to you). Use a
 # tool like ngrok while developing locally.
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://your-domain.example.com")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://blessings-data-hub-bot.onrender.com")
 PAYSTACK_WEBHOOK_PATH = "/webhook/paystack"
 HUBNET_WEBHOOK_PATH = "/webhook/hubnet"
-PAYSTACK_CALLBACK_URL = f"{PUBLIC_BASE_URL}/payment/callback"
+PAYSTACK_CALLBACK_URL = f"{https://blessings-data-hub-bot.onrender.com}/payment/callback"
 
 WEBHOOK_SERVER_HOST = os.getenv("HOST", "0.0.0.0")
 WEBHOOK_SERVER_PORT = int(os.getenv("PORT", "5000"))
