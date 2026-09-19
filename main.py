@@ -21,7 +21,7 @@ Conversation flow:
 
 import logging
 import re
-
+from keep_alive import keep_alive
 import telebot
 from telebot.types import (
     InlineKeyboardMarkup,
@@ -277,6 +277,7 @@ def on_confirm_order(call):
         bot.send_message(call.message.chat.id, "That bundle was just removed. Please choose another one.")
         _sessions.pop(call.message.chat.id, None)
     return
+
     price = bundle["price_ghs"]
 
     user = db.get_or_create_user(
@@ -381,8 +382,12 @@ def free_text(message):
 
 
 def run_polling():
+    keep_alive()
     db.init_db()
     worker.init(bot)
     worker.start()
     logger.info("Bot polling started")
     bot.infinity_polling()
+
+if __name__ == "__main__":
+    run_polling()
